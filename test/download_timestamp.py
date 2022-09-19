@@ -1,4 +1,3 @@
-from time import time
 import time
 
 while True:
