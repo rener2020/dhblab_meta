@@ -2,6 +2,11 @@
 ![](./doc/通讯流程图.png)
 
 
+# 运行前准备
+需求：\
+- python3.8
+- peewee: `pip install peewee`
+
 # 服务端配置运行
 
 1. 配置主机$IP$地址与端口 \
