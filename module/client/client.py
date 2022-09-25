@@ -3,6 +3,7 @@ import threading
 import json
 import time
 from module.util import chaos2order
+from config.system import DEBUG
 
 
 class Client():
@@ -50,9 +51,12 @@ class Client():
             for line in order:
                 data = json.loads(line)
                 if 'e_type' not in data:
+                    print(data)
                     continue
+                # 数据库操作
                 info = self.e_data_drivers[data["e_type"]].input(data)
-                print(info)
+                if DEBUG:
+                    print(info)
 
     def __send_message_thread(self, message):
         """
@@ -86,6 +90,13 @@ class Client():
             if success:
                 self.send(data)
             else:
+                # 如果设备信息不存在，则在数据库中初始化行
+                # 不应该由通讯完成，尽量进行数据与通讯的解耦
+                # 通讯只用于数据同步
+                # success, data = self.e_data_drivers[self.e_type].input({
+                #     'e_type': self.e_type,
+                #     'number': self.e_number,
+                # })
                 print(data)
             # 数据更新频率在这里控制
             time.sleep(0.01)

@@ -2,20 +2,24 @@ import socket
 import threading
 import json
 from module.util import chaos2order
-
+from config.system import DEBUG
 
 class Server:
     """
     服务器类
     """
 
-    def __init__(self):
+    def __init__(self,ip,port):
         """
         构造
         """
         self.__socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.__connections = list()
         self.__nicknames = list()
+
+        # 
+        self.ip = ip
+        self.port = port
 
     def __user_thread(self, user_id):
         """
@@ -34,7 +38,6 @@ class Server:
                          )
 
         # 侦听
-        #
         last_broken_head = None
         while True:
             buffer = connection.recv(1024).decode()
@@ -52,30 +55,12 @@ class Server:
             last_broken_head = broken_head
 
             for packet in order:
-                print(packet)
+                if DEBUG:
+                    print(packet)
                 obj = json.loads(packet)
-                try:
-                    obj = json.loads(packet)
-                    print
-                except Exception:
-                    continue
-                # 如果是广播指令
+                obj = json.loads(packet)
+                # 广播全部
                 self.__broadcast(user_id, obj)
-                # if obj['type'] == 'broadcast':
-                #     self.__broadcast(obj['sender_id'], obj['message'])
-                #     print( obj['message'])
-                # print(obj)
-                # elif obj['type'] == 'logout':
-                #     print('[Server] 用户', user_id, nickname, '退出系统')
-                #     self.__broadcast(message='用户 ' + str(nickname) +
-                #                      '(' + str(user_id) + ')' + '退出系统')
-                #     self.__connections[user_id].close()
-                #     self.__connections[user_id] = None
-                #     self.__nicknames[user_id] = None
-                #     break
-                # else:
-                # print('[Server] 无法解析json数据包:',
-                #       connection.getsockname(), connection.fileno())
 
     def __broadcast(self, user_id=0, message=''):
         """
@@ -127,7 +112,7 @@ class Server:
         启动服务器
         """
         # 绑定端口
-        self.__socket.bind(('0.0.0.0', 8888))
+        self.__socket.bind((self.ip, self.port))
         # 启用监听
         self.__socket.listen(100)
         print('[Server] 服务器正在运行......')
