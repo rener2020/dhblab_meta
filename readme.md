@@ -30,6 +30,6 @@
 - e_number： 设备编号
 
 ## 向其他客户端发送数据
-向`./storage/db/sqlite/dhblab_meta`数据库中对应与设备类型`e_type`表与表中对应`e_number`的行中写入需要发送的数据内容
+向`./storage/db/sqlite/dhblab_meta`数据库文件中对应与设备类型`e_type`表与表中对应`e_number`的行中写入需要发送的数据内容
 ## 同步其他客户端发送的数据
-从`./storage/db/sqlite/dhblab_meta`数据库中读取数据内容
+从`./storage/db/sqlite/dhblab_meta`数据库文件中读取数据内容
