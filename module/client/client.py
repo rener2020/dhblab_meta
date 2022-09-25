@@ -2,6 +2,7 @@ import socket
 import threading
 import json
 import time
+from module.util import chaos2order
 
 
 class Client():
@@ -11,7 +12,7 @@ class Client():
     prompt = ''
     intro = '[Welcome] 简易系统客户端(Cli版)\n' + '[Welcome] 输入help来获取帮助\n'
 
-    def __init__(self):
+    def __init__(self, ip, port, e_data_drivers, e_type, e_number):
         """
         构造
         """
@@ -23,38 +24,48 @@ class Client():
         self.__nickname = 'C4'
         self.__isLogin = False
 
+        # 服务器地址
+        self.ip = ip
+        self.port = port
+        # 自身的类型
+        self.e_type = e_type
+        # 自身的设备编号
+        self.e_number = e_number
+        # 装备数据驱动
+        self.e_data_drivers = e_data_drivers
+
     def __receive_message_thread(self):
         """
         接受消息线程
         """
+        last_broken_head = None
         while self.__isLogin:
             # noinspection PyBroadException
-            try:
-                buffer = self.__socket.recv(1024).decode()
-                with open('recv_cache.txt', 'w') as f:
-                    # 将获取的信息写入文件中
-                    f.write(str(buffer))
-                # print('[' + str(obj['sender_nickname']) + '(' + str(obj['sender_id']) + ')' + ']', obj['message'])
-            except Exception as e:
-                print(e)
-                print('[Client] 无法从服务器获取数据')
+            buffer = self.__socket.recv(1024).decode()
+            # 解析成json数据
+            order, broken_head, broken_tail = chaos2order(buffer, '{', '}')
+            if last_broken_head and broken_tail:
+                order.insert(0, last_broken_head + broken_tail)
+            last_broken_head = broken_head
+            for line in order:
+                data = json.loads(line)
+                if 'e_type' not in data:
+                    continue
+                info = self.e_data_drivers[data["e_type"]].input(data)
+                print(info)
 
     def __send_message_thread(self, message):
         """
         发送消息线程
         :param message: 消息内容
         """
-        self.__socket.send(json.dumps({
-            'type': 'broadcast',
-            'sender_id': self.__id,
-            'message': message
-        }).encode())
+        self.__socket.send(json.dumps(message).encode())
 
     def start(self):
         """
         启动客户端
         """
-        self.__socket.connect(('0.0.0.0', 8888))
+        self.__socket.connect((self.ip, self.port))
 
         while True:
             if not self.__isLogin:
@@ -71,10 +82,13 @@ class Client():
                     # 登录失败，等待一秒
                     time.sleep(1)
                     continue
-            with open('send_cache.txt', 'r') as f:
-                self.send(f.read().strip())
+            success, data = self.e_data_drivers[self.e_type].get(self.e_number)
+            if success:
+                self.send(data)
+            else:
+                print(data)
             # 数据更新频率在这里控制
-            time.sleep(0.1)
+            time.sleep(0.01)
 
     def login(self):
         """
@@ -106,9 +120,6 @@ class Client():
         发送消息
         :param args: 参数
         """
-        # 显示自己发送的消息
-        #print('[' + str(self.__nickname) +
-         #     '(' + str(self.__id) + ')' + ']', message)
         # 开启子线程用于发送数据
         thread = threading.Thread(
             target=self.__send_message_thread, args=(message,))

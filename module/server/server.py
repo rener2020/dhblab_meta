@@ -8,6 +8,7 @@ class Server:
     """
     服务器类
     """
+
     def __init__(self):
         """
         构造
@@ -24,8 +25,13 @@ class Server:
         connection = self.__connections[user_id]
         nickname = self.__nicknames[user_id]
         print('[Server] 用户', user_id, nickname, '加入系统')
-        self.__broadcast(message='用户 ' + str(nickname) +
-                         '(' + str(user_id) + ')' + '加入系统')
+        self.__broadcast(message={
+            'sender_id': user_id,
+            'sender_nickname': self.__nicknames[user_id],
+            'message': '用户 ' + str(nickname) +
+                         '(' + str(user_id) + ')' + '加入系统'
+                         }
+                         )
 
         # 侦听
         #
@@ -46,25 +52,30 @@ class Server:
             last_broken_head = broken_head
 
             for packet in order:
+                print(packet)
+                obj = json.loads(packet)
                 try:
                     obj = json.loads(packet)
+                    print
                 except Exception:
                     continue
                 # 如果是广播指令
-                if obj['type'] == 'broadcast':
-                    self.__broadcast(obj['sender_id'], obj['message'])
-                    # print(obj)
-                elif obj['type'] == 'logout':
-                    print('[Server] 用户', user_id, nickname, '退出系统')
-                    self.__broadcast(message='用户 ' + str(nickname) +
-                                     '(' + str(user_id) + ')' + '退出系统')
-                    self.__connections[user_id].close()
-                    self.__connections[user_id] = None
-                    self.__nicknames[user_id] = None
-                    break
-                else:
-                    print('[Server] 无法解析json数据包:',
-                          connection.getsockname(), connection.fileno())
+                self.__broadcast(user_id, obj)
+                # if obj['type'] == 'broadcast':
+                #     self.__broadcast(obj['sender_id'], obj['message'])
+                #     print( obj['message'])
+                # print(obj)
+                # elif obj['type'] == 'logout':
+                #     print('[Server] 用户', user_id, nickname, '退出系统')
+                #     self.__broadcast(message='用户 ' + str(nickname) +
+                #                      '(' + str(user_id) + ')' + '退出系统')
+                #     self.__connections[user_id].close()
+                #     self.__connections[user_id] = None
+                #     self.__nicknames[user_id] = None
+                #     break
+                # else:
+                # print('[Server] 无法解析json数据包:',
+                #       connection.getsockname(), connection.fileno())
 
     def __broadcast(self, user_id=0, message=''):
         """
@@ -79,11 +90,7 @@ class Server:
             #     continue
             if user_id != i and self.__connections[i]:
                 try:
-                    self.__connections[i].send(json.dumps({
-                        'sender_id': user_id,
-                        'sender_nickname': self.__nicknames[user_id],
-                        'message': message
-                    }).encode())
+                    self.__connections[i].send(json.dumps(message).encode())
                 except Exception:
                     print(i, 'dead')
                     self.__connections[i] = None
