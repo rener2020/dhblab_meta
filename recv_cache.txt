@@ -1,1 +1,0 @@
-{"sender_id": 4, "sender_nickname": "C4", "message": "222"}{"sender_id": 3, "sender_nickname": "C4", "message": ""}

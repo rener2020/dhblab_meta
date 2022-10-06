@@ -1,0 +1,1 @@
+{"sender_id": 0, "sender_nickname": "System", "message": "\u7528\u6237 2(7)\u52a0\u5165\u7cfb\u7edf"}

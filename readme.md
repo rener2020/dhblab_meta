@@ -5,14 +5,14 @@
 # 服务端配置运行
 
 1. 配置主机$IP$地址与端口 \
-  在`./module/server/server.py`第`123`行配置
+  在`config/server.py`中配置
 3. 在项目目录打开命令行，运行服务端 \
   `python server_start.py`
 # 客户端配置运行
 1. 配置服务端$IP$地址与端口 \
-在`./module/client/client.py`第`57`行配置
+在`config/client.py`中配置
 2. 配置客户端名称 \
-在`./module/client/client.py`第`23`行配置
+在`config/client.py`中配置
 3. 在项目目录打开命令行，运行服务端 \
   `python client_start.py`
 

@@ -8,13 +8,17 @@ class Server:
     """
     服务器类
     """
-    def __init__(self):
+
+    def __init__(self, ip, port):
         """
         构造
         """
         self.__socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.__connections = list()
         self.__nicknames = list()
+
+        self.ip = ip
+        self.port = port
 
     def __user_thread(self, user_id):
         """
@@ -41,6 +45,7 @@ class Server:
                 return
             # 解析成json数据
             order, broken_head, broken_tail = chaos2order(buffer, '{', '}')
+            
             if last_broken_head and broken_tail:
                 order.insert(0, last_broken_head + broken_tail)
             last_broken_head = broken_head
@@ -50,6 +55,7 @@ class Server:
                     obj = json.loads(packet)
                 except Exception:
                     continue
+                # print(packet)
                 # 如果是广播指令
                 if obj['type'] == 'broadcast':
                     self.__broadcast(obj['sender_id'], obj['message'])
@@ -74,9 +80,6 @@ class Server:
         """
 
         for i in range(1, len(self.__connections)):
-            # print(len(self.__connections))
-            # if self.__connections[i] is None:
-            #     continue
             if user_id != i and self.__connections[i]:
                 try:
                     self.__connections[i].send(json.dumps({
@@ -120,7 +123,7 @@ class Server:
         启动服务器
         """
         # 绑定端口
-        self.__socket.bind(('0.0.0.0', 8888))
+        self.__socket.bind((self.ip, self.port))
         # 启用监听
         self.__socket.listen(100)
         print('[Server] 服务器正在运行......')
