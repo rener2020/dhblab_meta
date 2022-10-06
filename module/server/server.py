@@ -45,7 +45,6 @@ class Server:
                 return
             # 解析成json数据
             order, broken_head, broken_tail = chaos2order(buffer, '{', '}')
-            
             if last_broken_head and broken_tail:
                 order.insert(0, last_broken_head + broken_tail)
             last_broken_head = broken_head
@@ -55,7 +54,6 @@ class Server:
                     obj = json.loads(packet)
                 except Exception:
                     continue
-                # print(packet)
                 # 如果是广播指令
                 if obj['type'] == 'broadcast':
                     self.__broadcast(obj['sender_id'], obj['message'])

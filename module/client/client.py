@@ -4,7 +4,6 @@ import json
 import time
 from module.util import chaos2order
 
-
 class Client():
     """
     客户端
@@ -56,7 +55,7 @@ class Client():
                 with open(file_path, 'w') as f:
                     # 将获取的信息写入文件中
                     f.write(str(packet))
-                    # print(packet)
+                    print(packet)
 
     def __send_message_thread(self, message):
         """
@@ -93,7 +92,7 @@ class Client():
             with open('./devices/self.txt', 'r') as f:
                 self.send(f.read().strip())
             # 数据更新频率在这里控制
-            # time.sleep(0.1)
+            time.sleep(0.01)
 
     def login(self):
         """
