@@ -15,7 +15,7 @@
 # 客户端配置运行
 1. 配置服务端$IP$地址与端口 \
   在`config/client.py`中配置
-3. 配置客户端名称 \
+3. 配置**客户端名称** \
   在`config/client.py`中配置`name`字段
 4. 在项目目录打开命令行，运行服务端 \
   `python client_start.py`
