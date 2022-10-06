@@ -51,7 +51,7 @@ class Client():
                     print("数据包异常，数据包为：", packet)
                     continue
 
-                file_path = "./devices/_{}.txt".format(info['sender_nickname'])
+                file_path = "./storage/devices/_{}.txt".format(info['sender_nickname'])
                 with open(file_path, 'w') as f:
                     # 将获取的信息写入文件中
                     f.write(str(packet))
@@ -89,7 +89,7 @@ class Client():
                     # 登录失败，等待一秒
                     time.sleep(1)
                     continue
-            with open('./devices/self.txt', 'r') as f:
+            with open('./storage/devices/self.txt', 'r') as f:
                 self.send(f.read().strip())
             # 数据更新频率在这里控制
             time.sleep(0.01)
