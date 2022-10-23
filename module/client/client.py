@@ -2,7 +2,11 @@ import socket
 import threading
 import json
 import time
+
+from regex import F
 from module.util import chaos2order
+from module.file import get, put
+
 
 class Client():
     """
@@ -21,7 +25,8 @@ class Client():
         # ！！！！！！！！！！！！
         # 在这里配置你的机器用户名，使用英文字母（数字）
         self.__nickname = name
-        self.__isLogin = False
+        self.__is_login = False
+        self.__connected = False
 
         self.ip = ip
         self.port = port
@@ -31,12 +36,18 @@ class Client():
         接受消息线程
         """
         last_broken_head = None
-        while self.__isLogin:
+        while self.__is_login:
             # noinspection PyBroadException
-            buffer = self.__socket.recv(1024).decode()
+            try:
+                buffer = self.__socket.recv(1024).decode()
+            except Exception as e:
+                print("通讯异常，程序终止")
+                self.__connected = False
+                return
             if not buffer:
                 # 服务端断开
                 print("通讯异常，程序终止")
+                self.__connected = False
                 return
 
             order, broken_head, broken_tail = chaos2order(buffer, '{', '}')
@@ -51,34 +62,69 @@ class Client():
                     print("数据包异常，数据包为：", packet)
                     continue
 
-                file_path = "./storage/devices/_{}.txt".format(info['sender_nickname'])
-                with open(file_path, 'w') as f:
-                    # 将获取的信息写入文件中
-                    f.write(str(packet))
-                    print(packet)
+                file_path = "./storage/devices/_{}.txt".format(
+                    info['sender_nickname'])
+                put(packet, file_path)
+                print(packet)
 
     def __send_message_thread(self, message):
         """
         发送消息线程
         :param message: 消息内容
         """
-        self.__socket.send(json.dumps({
-            'type': 'broadcast',
-            'sender_id': self.__id,
-            'message': message
-        }).encode())
+        try:
+            self.__socket.send(json.dumps({
+                'type': 'broadcast',
+                'sender_id': self.__id,
+                'message': message
+            }).encode())
+        except Exception as e:
+            print(e)
+            self.__connected = False
+
+    def connect(self):
+        try:
+            self.__socket.connect((self.ip, self.port))
+            return True
+        except Exception as e:
+            pass
+        return False
 
     def start(self):
         """
         启动客户端
         """
-        self.__socket.connect((self.ip, self.port))
+        while True:
+            print('正在连接到服务器...')
+            # 第一次连接
+            self.__connected = self.connect()
+            if self.__connected:
+                # 如果已连接上
+                break
+            else:
+                time.sleep(1)
+                    
 
         while True:
-            if not self.__isLogin:
+            # 连接
+            if not self.__connected:
+                print('连接断开，正在重连...')
+                # 未连接，则重置登录状态
+                self.__is_login = False
+                self.__socket.close()
+                self.__socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                self.__connected = self.connect()
+            if not self.__connected:
+                time.sleep(1)
+                continue
+
+
+
+            if not self.__is_login:
+                
                 # 用户登录
                 self.login()
-                if self.__isLogin:
+                if self.__is_login:
                     # 如果登录成功
                     # 开启子线程用于接受数据
                     thread = threading.Thread(
@@ -89,8 +135,8 @@ class Client():
                     # 登录失败，等待一秒
                     time.sleep(1)
                     continue
-            with open('./storage/devices/self.txt', 'r') as f:
-                self.send(f.read().strip())
+            
+            self.send(get('./storage/devices/self.txt'))
             # 数据更新频率在这里控制
             time.sleep(0.01)
 
@@ -112,7 +158,7 @@ class Client():
             if obj['id']:
                 self.__id = obj['id']
                 # 登录成功
-                self.__isLogin = True
+                self.__is_login = True
                 print('[Client] 成功登录到系统')
             else:
                 print('[Client] 无法登录到系统')
@@ -142,5 +188,5 @@ class Client():
             'type': 'logout',
             'sender_id': self.__id
         }).encode())
-        self.__isLogin = False
+        self.__is_login = False
         return True
