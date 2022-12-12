@@ -39,8 +39,9 @@ class Server:
             buffer = connection.recv(1024).decode()
             if not buffer:
                 # 客户端断开
-                self.__connections[name].close()
-                self.__connections[name] = None
+                if self.__connections[name]:
+                    self.__connections[name].close()
+                    self.__connections[name] = None
                 print('[Server] 连接失效:', name, name)
                 return
             # 解析成json数据
@@ -79,13 +80,15 @@ class Server:
                 continue
                     
 
-    def __unicast(self, target_name, name=0, message=''):
+    def __unicast(self, target_name, name, message=''):
         """
         单播
         :param name: 用户id(0为系统)
         :param message: 广播内容
         """
-        if target_name in self.__connections:
+        if target_name == name:
+            return
+        if target_name in self.__connections and self.__connections[target_name]:
             connection = self.__connections[target_name]
         else:
             print("目标不存在，sender:{},target:{}".format(name, target_name))
@@ -128,9 +131,7 @@ class Server:
         obj = json.loads(buffer)
         # 如果是连接指令，那么则返回一个新的用户编号，接收用户连接
         if obj['type'] == 'login':
-            print(obj)
             self.__connections[obj['name']] = connection
-            print(self.__connections)
             connection.send(json.dumps({
                 'id': len(self.__connections) - 1
             }).encode())
