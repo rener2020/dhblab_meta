@@ -4,7 +4,6 @@ import json
 import time
 import os
 
-from regex import F
 from module.util import chaos2order
 from module.file import get, put
 
@@ -25,7 +24,7 @@ class Client():
         self.__id = None
         # ！！！！！！！！！！！！
         # 在这里配置你的机器用户名，使用英文字母（数字）
-        self.__nickname = name
+        self.__name = name
         self.__is_login = False
         self.__connected = False
 
@@ -38,7 +37,6 @@ class Client():
         """
         last_broken_head = None
         while self.__is_login:
-            # noinspection PyBroadException
             try:
                 buffer = self.__socket.recv(1024).decode()
             except Exception as e:
@@ -58,24 +56,24 @@ class Client():
 
             for packet in order:
                 info = json.loads(packet)
-
-                if 'sender_nickname' not in info:
+                if 'sender_name' not in info:
                     print("数据包异常，数据包为：", packet)
                     continue
-
                 file_path = "./storage/devices/_{}.txt".format(
-                    info['sender_nickname'])
+                    info['sender_name'])
                 put(packet, file_path)
                 print(packet)
 
-    def __send_message_thread(self, message):
+    def __send_message_thread(self, target_name, message):
         """
         发送消息线程
         :param message: 消息内容
         """
         try:
             self.__socket.send(json.dumps({
-                'type': 'broadcast',
+                'type': '__unicast',
+                "name": self.__name,
+                'target_name': target_name,
                 'sender_id': self.__id,
                 'message': message
             }).encode())
@@ -104,25 +102,23 @@ class Client():
                 break
             else:
                 time.sleep(1)
-                    
 
         while True:
             # 连接
             if not self.__connected:
+                break
                 print('连接断开，正在重连...')
                 # 未连接，则重置登录状态
                 self.__is_login = False
                 self.__socket.close()
-                self.__socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                self.__socket = socket.socket(
+                    socket.AF_INET, socket.SOCK_STREAM)
                 self.__connected = self.connect()
             if not self.__connected:
                 time.sleep(1)
                 continue
 
-
-
             if not self.__is_login:
-                
                 # 用户登录
                 self.login()
                 if self.__is_login:
@@ -136,13 +132,14 @@ class Client():
                     # 登录失败，等待一秒
                     time.sleep(1)
                     continue
-            for i in range(4):
+            for i in range(10):
                 path = './storage/devices/self_{}.txt'.format(i)
                 if os.path.exists(path):
-                    self.send(get(path))
-            # 数据更新频率在这里控制
+                    content = get(path)
+                    if content != '':
+                        self.send(str(i), get(path))
+                        put('',path)
             time.sleep(0.01)
-
     def login(self):
         """
         登录系统
@@ -151,7 +148,7 @@ class Client():
         # 将昵称发送给服务器，获取用户id
         self.__socket.send(json.dumps({
             'type': 'login',
-            'nickname': self.__nickname
+            'name': self.__name
         }).encode())
         # 尝试接受数据
         # noinspection PyBroadException
@@ -168,17 +165,17 @@ class Client():
         except Exception:
             print('[Client] 无法从服务器获取数据')
 
-    def send(self, message):
+    def send(self, target_name, message):
         """
         发送消息
         :param args: 参数
         """
         # 显示自己发送的消息
-        # print('[' + str(self.__nickname) +
+        # print('[' + str(self.__name) +
         #     '(' + str(self.__id) + ')' + ']', message)
         # 开启子线程用于发送数据
         thread = threading.Thread(
-            target=self.__send_message_thread, args=(message,))
+            target=self.__send_message_thread, args=(target_name, message,))
         thread.setDaemon(True)
         thread.start()
 
