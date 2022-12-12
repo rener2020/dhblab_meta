@@ -2,6 +2,7 @@ import socket
 import threading
 import json
 import time
+import os
 
 from regex import F
 from module.util import chaos2order
@@ -135,8 +136,10 @@ class Client():
                     # 登录失败，等待一秒
                     time.sleep(1)
                     continue
-            
-            self.send(get('./storage/devices/self.txt'))
+            for i in range(4):
+                path = './storage/devices/self_{}.txt'.format(i)
+                if os.path.exists(path):
+                    self.send(get(path))
             # 数据更新频率在这里控制
             time.sleep(0.01)
 

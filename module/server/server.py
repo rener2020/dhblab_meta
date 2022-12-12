@@ -76,7 +76,7 @@ class Server:
         :param user_id: 用户id(0为系统)
         :param message: 广播内容
         """
-
+        print(message)
         for i in range(1, len(self.__connections)):
             if user_id != i and self.__connections[i]:
                 try:
