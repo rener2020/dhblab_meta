@@ -71,7 +71,7 @@ class Client():
         """
         try:
             self.__socket.send(json.dumps({
-                'type': '__unicast',
+                'type': 'unicast',
                 "name": self.__name,
                 'target_name': target_name,
                 'sender_id': self.__id,
@@ -133,7 +133,7 @@ class Client():
                     time.sleep(1)
                     continue
             for i in range(10):
-                path = './storage/devices/self_{}.txt'.format(i)
+                path = './storage/devices/unicast_{}.txt'.format(i)
                 if os.path.exists(path):
                     content = get(path)
                     if content != '':

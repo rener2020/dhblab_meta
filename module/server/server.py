@@ -62,7 +62,7 @@ class Server:
                     self.__broadcast(obj['name'], obj['message'])
                     continue
                 # 如果是广播指令
-                if obj['type'] == '__unicast':
+                if obj['type'] == 'unicast':
                     self.__unicast(obj['target_name'],
                                    obj['sender_id'], obj['message'])
                     continue
