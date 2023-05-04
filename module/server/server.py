@@ -3,7 +3,6 @@ import threading
 import json
 from tkinter.messagebox import NO
 
-from django.db import connection
 from module.util import chaos2order
 
 
@@ -29,7 +28,7 @@ class Server:
         """
         connection = self.__connections[name]
         print('[Server] 用户', name, '加入系统')
-        self.__broadcast("system",message='用户 '+
+        self.__broadcast("system", message='用户 ' +
                          '(' + str(name) + ')' + '加入系统')
 
         # 侦听
@@ -64,7 +63,7 @@ class Server:
                 # 如果是广播指令
                 if obj['type'] == 'unicast':
                     self.__unicast(obj['target_name'],
-                                   obj['sender_id'], obj['message'])
+                                   obj['name'], obj['message'])
                     continue
                 if obj['type'] == 'logout':
                     print('[Server] 用户', name, name, '退出系统')
@@ -76,9 +75,8 @@ class Server:
                     break
                 print("+++++++++++")
                 print('[Server] 无法解析json数据包:{}'.format(packet),
-                    connection.getsockname(), connection.fileno())
+                      connection.getsockname(), connection.fileno())
                 continue
-                    
 
     def __unicast(self, target_name, name, message=''):
         """
@@ -143,7 +141,7 @@ class Server:
             thread.start()
         else:
             print('[Server] 无法解析json数据包:',
-                    connection.getsockname(), connection.fileno())
+                  connection.getsockname(), connection.fileno())
         # except Exception:
         #     print('[Server] 无法接受数据:', connection.getsockname(),
         #           connection.fileno())

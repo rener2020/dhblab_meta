@@ -12,8 +12,6 @@ class Client():
     """
     客户端
     """
-    prompt = ''
-    intro = '[Welcome] 简易系统客户端(Cli版)\n' + '[Welcome] 输入help来获取帮助\n'
 
     def __init__(self, ip, port, name):
         """
@@ -138,8 +136,9 @@ class Client():
                     content = get(path)
                     if content != '':
                         self.send(str(i), get(path))
-                        put('',path)
+                        put('', path)
             time.sleep(0.01)
+
     def login(self):
         """
         登录系统
